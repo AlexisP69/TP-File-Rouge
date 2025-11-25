@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fil Rouge – Helpdesk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f5f5f5;
+    }
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+    .ticket {
+      background: #fff;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    form {
+      background: #fff;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: bold;
+    }
+    input, textarea, button {
+      font: inherit;
+    }
+    input, textarea {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      padding: 0.4rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+    .status-open {
+      color: green;
+    }
+    .status-closed {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Helpdesk – Fil Rouge</h1>
+  <p>Petite application de gestion de tickets déployée sur Kubernetes.</p>
+
+  <h2>Nouveau ticket</h2>
+  <form id="ticket-form">
+    <label for="title">Titre</label>
+    <input id="title" name="title" required />
+
+    <label for="description">Description</label>
+    <textarea id="description" name="description"></textarea>
+
+    <button type="submit">Créer le ticket</button>
+  </form>
+
+  <h2>Liste des tickets</h2>
+  <div id="tickets"></div>
+
+  <script>
+    const API_BASE = "/api";
+
+    async function fetchTickets() {
+      const res = await fetch(`${API_BASE}/tickets`);
+      const data = await res.json();
+      renderTickets(data);
+    }
+
+    function renderTickets(tickets) {
+      const container = document.getElementById("tickets");
+      container.innerHTML = "";
+      if (!tickets.length) {
+        container.textContent = "Aucun ticket pour le moment.";
+        return;
+      }
+
+      tickets.forEach((t) => {
+        const div = document.createElement("div");
+        div.className = "ticket";
+
+        const statusClass =
+          t.status === "open" ? "status-open" : "status-closed";
+
+        div.innerHTML = `
+          <h3>#${t.id} - ${t.title}</h3>
+          <p><strong>Statut :</strong> <span class="${statusClass}">${t.status}</span></p>
+          <p><strong>Description :</strong> ${t.description || "(aucune)"} </p>
+          <p><strong>Créé le :</strong> ${new Date(t.created_at).toLocaleString()}</p>
+          <button data-id="${t.id}" data-status="open">Marquer comme ouvert</button>
+          <button data-id="${t.id}" data-status="closed">Marquer comme fermé</button>
+        `;
+
+        container.appendChild(div);
+      });
+
+      container.addEventListener(
+        "click",
+        async (e) => {
+          if (e.target.tagName.toLowerCase() === "button") {
+            const id = e.target.getAttribute("data-id");
+            const status = e.target.getAttribute("data-status");
+            await fetch(`${API_BASE}/tickets/${id}/status`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status }),
+            });
+            await fetchTickets();
+          }
+        },
+        { once: true }
+      );
+    }
+
+    document
+      .getElementById("ticket-form")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const title = document.getElementById("title").value;
+        const description = document.getElementById("description").value;
+
+        await fetch(`${API_BASE}/tickets`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, description }),
+        });
+
+        e.target.reset();
+        await fetchTickets();
+      });
+
+    fetchTickets();
+  </script>
+</body>
+</html>
