@@ -279,19 +279,3 @@ kubectl logs -l app=backend -f
 - Accéder à l'UI : http://fil-rouge.local
 
 ---
-
-## ✅ Checklist de fin de TP
-
-- [ ] Namespace `fil-rouge` utilisé
-- [ ] PostgreSQL déployé avec `PersistentVolumeClaim`
-- [ ] Secrets utilisés pour les mots de passe
-- [ ] ConfigMaps utilisés pour la configuration non sensible
-- [ ] Backend & frontend accessibles via Ingress
-- [ ] Probes configurées sur le backend
-- [ ] `HorizontalPodAutoscaler` fonctionnel pour le backend
-- [ ] Prometheus déployé et capable de scraper le backend
-- [ ] Grafana déployé et datasource Prometheus configurée
-- [ ] Dashboard Grafana simple créé
-- [ ] Documentation complétée (README + docs)
-
----
